@@ -11,7 +11,7 @@
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/Daemon/bin/Debug/netcoreapp3.1/Daemon.dll",
-            "args": [],
+            "args": ["http://52.169.49.196:9200", "TestJob"],
             "cwd": "${workspaceFolder}/Daemon",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
