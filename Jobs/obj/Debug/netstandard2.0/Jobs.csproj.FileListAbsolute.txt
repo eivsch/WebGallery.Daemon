@@ -1,9 +1,0 @@
-/home/eivind/Git/WebGallery.Daemon/Jobs/obj/Debug/netstandard2.0/Jobs.csprojAssemblyReference.cache
-/home/eivind/Git/WebGallery.Daemon/Jobs/obj/Debug/netstandard2.0/Jobs.AssemblyInfoInputs.cache
-/home/eivind/Git/WebGallery.Daemon/Jobs/obj/Debug/netstandard2.0/Jobs.AssemblyInfo.cs
-/home/eivind/Git/WebGallery.Daemon/Jobs/obj/Debug/netstandard2.0/Jobs.csproj.CoreCompileInputs.cache
-/home/eivind/Git/WebGallery.Daemon/Jobs/bin/Debug/netstandard2.0/Jobs.deps.json
-/home/eivind/Git/WebGallery.Daemon/Jobs/bin/Debug/netstandard2.0/Jobs.dll
-/home/eivind/Git/WebGallery.Daemon/Jobs/bin/Debug/netstandard2.0/Jobs.pdb
-/home/eivind/Git/WebGallery.Daemon/Jobs/obj/Debug/netstandard2.0/Jobs.dll
-/home/eivind/Git/WebGallery.Daemon/Jobs/obj/Debug/netstandard2.0/Jobs.pdb
