@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Daemon": {
+      "commandName": "Project",
+      "commandLineArgs": "http://13.69.189.121:9200 gallery2 addapppathtotagsjob"
+    }
+  }
+}

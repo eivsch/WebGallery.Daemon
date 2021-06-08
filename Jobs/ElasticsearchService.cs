@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Nest;
 
@@ -8,14 +9,16 @@ namespace Jobs
     public class ElasticsearchService
     {
         private readonly IElasticClient _client;
+        private readonly string _userName;
         
-        public ElasticsearchService(string elasticsearchEndpoint)
+        public ElasticsearchService(string elasticsearchEndpoint, string userName)
         {
             var connectionSettings = new ConnectionSettings(
                 new Uri(elasticsearchEndpoint)
             );
 
             _client = new ElasticClient(connectionSettings);
+            _userName = userName;
         }
 
         public async Task<IEnumerable<string>> GetAllAlbums()
@@ -29,7 +32,7 @@ namespace Jobs
                             .Size(800)
                         )
                     )
-                    .Index("picture")
+                    .Index($"{_userName}_picture")
                 );
 
                 var list = new List<string>();
@@ -58,7 +61,7 @@ namespace Jobs
                     )
                     .From(from)
                     .Size(batchSize)
-                    .Index("picture")
+                    .Index($"{_userName}_picture")
                 );
 
             if (!searchResponse.IsValid)
@@ -71,7 +74,81 @@ namespace Jobs
         {
             var updateResponse = await _client.UpdateAsync<PictureDTO>(picture.Id, u => u
                 .Doc(picture)
-                .Index("picture")
+                .Index($"{_userName}_picture")
+            );
+
+            if (!updateResponse.IsValid)
+            {
+                throw new Exception(updateResponse.DebugInformation);
+            }
+        }
+
+        public async Task<IEnumerable<TagDTO>> GetAllTagsAndUpdateAppPathFromPicture()
+        {
+            Console.WriteLine("Initiating scroll search on tags index ...");
+            var searchResponse = _client.Search<TagDTO>(s => s
+                .Scroll("10s")
+                .Index($"{_userName}_tag")
+            );
+
+            if (!searchResponse.IsValid)
+                throw new Exception(searchResponse.DebugInformation);
+
+            while (searchResponse.Documents.Any())
+            {
+                await ProcessResponse();
+                Console.WriteLine("Continue scrolling ...");
+                searchResponse = _client.Scroll<TagDTO>("10s", searchResponse.ScrollId);
+            }
+
+            return searchResponse.Documents;
+
+            async Task ProcessResponse()
+            {
+                // Map the internal _id field to the DTO 'Id' field
+                var tags = searchResponse.Hits.Select(h =>
+                {
+                    h.Source.Id = h.Id;
+                    return h.Source;
+                }).ToList();
+
+                Console.WriteLine($"Processing a batch of {tags.Count} tags ...");
+                foreach (var tag in tags)
+                {
+                    if (string.IsNullOrWhiteSpace(tag.PictureAppPath))
+                    {
+                        var pic = GetPicture(tag.PictureId);
+                        tag.PictureAppPath = pic.AppPath;
+                        
+                        await UpdateTag(tag);
+                    }
+                }
+            }
+        }
+
+        PictureDTO GetPicture(string id)
+        {
+            var searchResponse = _client.Search<PictureDTO>(s => s
+                    .Query(q => q
+                        .Match(m => m
+                            .Field(f => f.Id.Suffix("keyword"))
+                            .Query(id)
+                        )
+                    )
+                    .Index($"{_userName}_picture")
+                );
+
+            if (!searchResponse.IsValid)
+                throw new Exception(searchResponse.DebugInformation);
+
+            return searchResponse.Documents.FirstOrDefault();
+        }
+
+        async Task UpdateTag(TagDTO tag)
+        {
+            var updateResponse = await _client.UpdateAsync<TagDTO>(tag.Id, u => u
+                .Doc(tag)
+                .Index($"{_userName}_tag")
             );
 
             if (!updateResponse.IsValid)
@@ -94,5 +171,15 @@ namespace Jobs
         public string Name { get; set; }
         public string FolderId { get; set; }
         public int FolderSortOrder { get; set; }
+        public string AppPath { get; set; }
+    }
+
+    public class TagDTO
+    {
+        public string Id { get; set; }
+        public string TagName { get; set; }
+        public string PictureId { get; set; }
+        public string PictureAppPath { get; set; }
+        public DateTime Added { get; set; }
     }
 }

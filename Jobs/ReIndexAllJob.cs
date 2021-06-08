@@ -18,18 +18,23 @@ namespace Jobs
 
         public async Task Run()
         {
+            Console.WriteLine("Getting all albums...");
             var allAlbums = await _esService.GetAllAlbums();
 
             foreach (var albumId in allAlbums)
                 await IndexAlbum(albumId);
+
+            Console.WriteLine($"Indexed {allAlbums.Count()} albums - {_globalIndexCounter-1} pictures (max global index).");
         }
 
         async Task IndexAlbum(string albumId)
         {
+            Console.WriteLine("Indexing album " + albumId);
             int from = 0, size = 100, albumIndexCounter = 1;
 
             while (true)
             {
+                Console.WriteLine($"Indexing album pictures from {from} to {from + size} ...");
                 var pictures = await _esService.GetAlbumPictures(albumId, from, size);
                 if (pictures.Count() == 0)
                     break;
